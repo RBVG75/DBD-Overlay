@@ -1,0 +1,17 @@
+{
+  "name": "overlay-stopwatch",
+  "version": "1.0.0",
+  "description": "Minimalist gamer overlay stopwatch for Windows",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "vite": "^8.0.13"
+  }
+}

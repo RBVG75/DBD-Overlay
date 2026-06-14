@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Stopwatch</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="scoreboard" data-tauri-drag-region>
+      <div id="score-display">
+        <div class="score-player" id="player1-section">
+          <input type="text" class="player-name" id="player1-name" value="Player 1" maxlength="12" />
+          <span class="score-value" id="player1-score">0</span>
+        </div>
+        <span class="score-separator">:</span>
+        <div class="score-player" id="player2-section">
+          <span class="score-value" id="player2-score">0</span>
+          <input type="text" class="player-name" id="player2-name" value="Player 2" maxlength="12" />
+        </div>
+      </div>
+      <input type="text" id="match-title" placeholder="Match title..." maxlength="40" />
+    </div>
+    <div id="stopwatch" data-tauri-drag-region>
+      <div id="display">
+        <span id="minutes">00</span>
+        <span id="separator" class="separator">:</span>
+        <span id="seconds">00</span>
+        <span id="separator2" class="separator2">:</span>
+        <span id="centiseconds">00</span>
+      </div>
+      <div id="controls">
+        <button id="btn-start" class="btn btn-start" type="button" title="Iniciar" aria-label="Iniciar">&gt;</button>
+        <button id="btn-pause" class="btn btn-pause" type="button" title="Pausar" aria-label="Pausar">||</button>
+        <button id="btn-reset" class="btn btn-reset" type="button" title="Reiniciar" aria-label="Reiniciar">R</button>
+      </div>
+      <div id="status">
+        <span id="status-text">READY</span>
+      </div>
+    </div>
+    <div id="settings-panel" class="hidden">
+      <div class="settings-header">
+        <span>Settings</span>
+        <button id="btn-close-settings" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-group">
+          <label>Start Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-start">
+            <span class="hotkey-display" id="hotkey-start-display">Ctrl+Shift+F1</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Pause Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-pause">
+            <span class="hotkey-display" id="hotkey-pause-display">Ctrl+Shift+F2</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Reset Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-reset">
+            <span class="hotkey-display" id="hotkey-reset-display">Ctrl+Shift+F3</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Toggle Overlay Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-toggle">
+            <span class="hotkey-display" id="hotkey-toggle-display">Ctrl+Shift+F4</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Settings Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-settings">
+            <span class="hotkey-display" id="hotkey-settings-display">Ctrl+Shift+F5</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>Lock Hotkey</label>
+          <div class="hotkey-picker" data-target="hotkey-lock">
+            <span class="hotkey-display" id="hotkey-lock-display">F6</span>
+            <span class="hotkey-hint">Press keys to set</span>
+          </div>
+        </div>
+        <div class="setting-group" id="countdown-settings-group">
+          <label>Countdowns</label>
+          <div id="countdown-settings-list"></div>
+          <button id="btn-add-countdown" class="btn-add-countdown" type="button">+ Add Countdown</button>
+        </div>
+        <div class="setting-group">
+          <label>Font Size (px)</label>
+          <input type="number" id="font-size" min="16" max="120" value="48" />
+        </div>
+        <div class="setting-group">
+          <label>Accent Color</label>
+          <input type="color" id="accent-color" value="#00ff88" />
+        </div>
+      </div>
+      <div class="settings-footer">
+        <button id="btn-save-settings" class="btn btn-save" type="button">Save</button>
+      </div>
+    </div>
+    <div id="countdowns"></div>
+    <button id="btn-lock" class="btn-lock" type="button" title="Lock (click-through mode)" aria-label="Bloquear">L</button>
+    <button id="btn-settings" class="btn-settings" type="button" title="Settings" aria-label="Abrir ajustes">S</button>
+  </div>
+  <input type="file" id="countdown-image-input" accept="image/*" aria-label="Imagen del temporizador" hidden />
+  <script type="module" src="main.js"></script>
+</body>
+</html>

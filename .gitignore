@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+.npm-cache/
+*.log
+.DS_Store
+Thumbs.db
+Decisive.webp
+Endurance.webp

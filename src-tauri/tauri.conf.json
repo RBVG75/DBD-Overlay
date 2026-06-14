@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicedouble/tauri/main/crates/tauri-config-schema/schema.json",
+  "productName": "Overlay Stopwatch",
+  "version": "1.0.0",
+  "identifier": "com.overlay.stopwatch",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npx vite --config vite.config.js",
+    "beforeBuildCommand": "npx vite build --config vite.config.js"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Overlay Stopwatch",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "minWidth": 300,
+        "minHeight": 160,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focusable": true,
+        "visible": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    }
+  },
+  "plugins": {
+    "globalShortcut": {}
+  }
+}
