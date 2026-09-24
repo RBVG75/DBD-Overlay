@@ -1,115 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Overlay Stopwatch</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app">
-    <div id="scoreboard" data-tauri-drag-region>
-      <div id="score-display">
-        <div class="score-player" id="player1-section">
-          <input type="text" class="player-name" id="player1-name" value="Player 1" maxlength="12" />
-          <span class="score-value" id="player1-score">0</span>
+    <!-- Countdown timers and info panels live in nine screen anchors each,
+         filled at runtime. -->
+    <div id="timer-layer"></div>
+    <div id="panel-layer"></div>
+
+    <section id="scoreboard" class="widget" aria-label="Marcador">
+      <div class="sb-row">
+        <div class="sb-side" data-player="1">
+          <input type="text" class="sb-name" id="player1-name" maxlength="16" aria-label="Nombre del jugador 1" />
+          <span class="sb-score" id="player1-score" role="button" tabindex="0" data-no-drag
+                title="Clic: +1 · Clic derecho: -1">0</span>
         </div>
-        <span class="score-separator">:</span>
-        <div class="score-player" id="player2-section">
-          <span class="score-value" id="player2-score">0</span>
-          <input type="text" class="player-name" id="player2-name" value="Player 2" maxlength="12" />
+        <span class="sb-sep">·</span>
+        <div class="sb-side reverse" data-player="2">
+          <span class="sb-score" id="player2-score" role="button" tabindex="0" data-no-drag
+                title="Clic: +1 · Clic derecho: -1">0</span>
+          <input type="text" class="sb-name" id="player2-name" maxlength="16" aria-label="Nombre del jugador 2" />
         </div>
       </div>
-      <input type="text" id="match-title" placeholder="Match title..." maxlength="40" />
+      <input type="text" id="match-title" class="sb-title" placeholder="Título del enfrentamiento…" maxlength="48" />
+    </section>
+
+    <section id="stopwatch" class="widget" aria-label="Cronómetro">
+      <div class="sw-ring-wrap hidden">
+        <svg class="sw-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="sw-ring-bg" cx="50" cy="50" r="44" />
+          <circle class="sw-ring-fg" cx="50" cy="50" r="44" />
+        </svg>
+      </div>
+      <div class="sw-display"></div>
+      <div class="sw-laps hidden"></div>
+      <div class="sw-controls">
+        <button class="sw-btn" data-action="start" type="button" title="Iniciar o pausar" aria-label="Iniciar o pausar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 19 12 8 18.5z" /></svg>
+        </button>
+        <button class="sw-btn" data-action="pause" type="button" title="Pausar" aria-label="Pausar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" /></svg>
+        </button>
+        <button class="sw-btn" data-action="lap" type="button" title="Vuelta" aria-label="Vuelta">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v2.2H4zm0 3.9h16v2.2H4zm0 3.9h11v2.2H4z" /></svg>
+        </button>
+        <button class="sw-btn danger" data-action="reset" type="button" title="Reiniciar" aria-label="Reiniciar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 0 6.7 9h-2.3A4.8 4.8 0 1 1 12 7.2c1.3 0 2.5.5 3.4 1.4L13 11h6V5l-2 2a7 7 0 0 0-5-2z" /></svg>
+        </button>
+      </div>
+      <div class="sw-status" data-state="ready"><span class="sw-status-text">LISTO</span></div>
+    </section>
+
+    <div id="crosshair" aria-hidden="true">
+      <span class="ch-line ch-top"></span>
+      <span class="ch-line ch-bottom"></span>
+      <span class="ch-line ch-left"></span>
+      <span class="ch-line ch-right"></span>
+      <span class="ch-shape"></span>
+      <span class="ch-shape-2"></span>
+      <span class="ch-center"></span>
     </div>
-    <div id="stopwatch" data-tauri-drag-region>
-      <div id="display">
-        <span id="minutes">00</span>
-        <span id="separator" class="separator">:</span>
-        <span id="seconds">00</span>
-        <span id="separator2" class="separator2">:</span>
-        <span id="centiseconds">00</span>
-      </div>
-      <div id="controls">
-        <button id="btn-start" class="btn btn-start" type="button" title="Iniciar" aria-label="Iniciar">&gt;</button>
-        <button id="btn-pause" class="btn btn-pause" type="button" title="Pausar" aria-label="Pausar">||</button>
-        <button id="btn-reset" class="btn btn-reset" type="button" title="Reiniciar" aria-label="Reiniciar">R</button>
-      </div>
-      <div id="status">
-        <span id="status-text">READY</span>
-      </div>
+
+    <div id="toolbar" data-position="bottom-right">
+      <button id="btn-lock" class="tool-btn" type="button" title="Bloquear clics (modo atravesable)" aria-label="Bloquear clics">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h1.2v10H5.8V10zm2.2 0h5.6V8a2.8 2.8 0 0 0-5.6 0z" /></svg>
+      </button>
+      <button id="btn-pointer" class="tool-btn" type="button" title="Cambiar la mira" aria-label="Cambiar la mira">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v4h-2zm0 14h2v4h-2zM3 11h4v2H3zm14 0h4v2h-4zm-5-3.4A4.4 4.4 0 1 0 16.4 12 4.4 4.4 0 0 0 12 7.6m0 2.2A2.2 2.2 0 1 1 9.8 12 2.2 2.2 0 0 1 12 9.8" /></svg>
+      </button>
+      <button id="btn-edit" class="tool-btn" type="button" title="Editar datos sobre el overlay" aria-label="Editar datos sobre el overlay">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.8-.8 3.9 3.9-.8L18.7 8.3l-3-3zM20.1 6.9a1.5 1.5 0 0 0 0-2.1l-.9-.9a1.5 1.5 0 0 0-2.1 0l-.7.7 3 3z" /></svg>
+      </button>
+      <button id="btn-settings" class="tool-btn" type="button" title="Ajustes" aria-label="Abrir ajustes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 8.4a3.6 3.6 0 1 0 3.6 3.6A3.6 3.6 0 0 0 12 8.4m8.4 3.6a8.4 8.4 0 0 1-.1 1.2l2 1.6-1.9 3.3-2.4-1a8.5 8.5 0 0 1-2 1.2l-.4 2.5h-3.8l-.4-2.5a8.5 8.5 0 0 1-2-1.2l-2.4 1-1.9-3.3 2-1.6a8.4 8.4 0 0 1 0-2.4l-2-1.6L5 5.9l2.4 1a8.5 8.5 0 0 1 2-1.2l.4-2.5h3.8l.4 2.5a8.5 8.5 0 0 1 2 1.2l2.4-1 1.9 3.3-2 1.6a8.4 8.4 0 0 1 .1 1.2" /></svg>
+      </button>
     </div>
-    <div id="settings-panel" class="hidden">
-      <div class="settings-header">
-        <span>Settings</span>
-        <button id="btn-close-settings" type="button" aria-label="Cerrar">&times;</button>
-      </div>
+
+    <div id="settings-scrim" class="hidden"></div>
+
+    <div id="settings-panel" class="hidden" role="dialog" aria-modal="true" aria-label="Ajustes">
+      <header class="settings-head">
+        <div class="settings-title">
+          <span class="settings-dot"></span>
+          <span>Ajustes del overlay</span>
+        </div>
+        <button class="settings-close" type="button" aria-label="Cerrar ajustes">&times;</button>
+      </header>
       <div class="settings-body">
-        <div class="setting-group">
-          <label>Start Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-start">
-            <span class="hotkey-display" id="hotkey-start-display">Ctrl+Shift+F1</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label>Pause Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-pause">
-            <span class="hotkey-display" id="hotkey-pause-display">Ctrl+Shift+F2</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label>Reset Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-reset">
-            <span class="hotkey-display" id="hotkey-reset-display">Ctrl+Shift+F3</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label>Toggle Overlay Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-toggle">
-            <span class="hotkey-display" id="hotkey-toggle-display">Ctrl+Shift+F4</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label>Settings Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-settings">
-            <span class="hotkey-display" id="hotkey-settings-display">Ctrl+Shift+F5</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group">
-          <label>Lock Hotkey</label>
-          <div class="hotkey-picker" data-target="hotkey-lock">
-            <span class="hotkey-display" id="hotkey-lock-display">F6</span>
-            <span class="hotkey-hint">Press keys to set</span>
-          </div>
-        </div>
-        <div class="setting-group" id="countdown-settings-group">
-          <label>Countdowns</label>
-          <div id="countdown-settings-list"></div>
-          <button id="btn-add-countdown" class="btn-add-countdown" type="button">+ Add Countdown</button>
-        </div>
-        <div class="setting-group">
-          <label>Font Size (px)</label>
-          <input type="number" id="font-size" min="16" max="120" value="48" />
-        </div>
-        <div class="setting-group">
-          <label>Accent Color</label>
-          <input type="color" id="accent-color" value="#00ff88" />
-        </div>
+        <nav class="settings-tabs" aria-label="Secciones"></nav>
+        <div class="settings-pages"></div>
       </div>
-      <div class="settings-footer">
-        <button id="btn-save-settings" class="btn btn-save" type="button">Save</button>
-      </div>
+      <footer class="settings-foot">
+        <span class="settings-status" role="status"></span>
+        <div class="settings-foot-actions">
+          <span class="settings-tip">Los cambios se ven al instante · Guardar los conserva</span>
+          <button class="settings-save" type="button">Guardar</button>
+        </div>
+      </footer>
     </div>
-    <div id="countdowns"></div>
-    <button id="btn-lock" class="btn-lock" type="button" title="Lock (click-through mode)" aria-label="Bloquear">L</button>
-    <button id="btn-settings" class="btn-settings" type="button" title="Settings" aria-label="Abrir ajustes">S</button>
+
+    <div id="toast" role="status"></div>
   </div>
-  <input type="file" id="countdown-image-input" accept="image/*" aria-label="Imagen del temporizador" hidden />
+
+  <input type="file" id="image-input" accept="image/*" hidden aria-hidden="true" />
   <script type="module" src="main.js"></script>
 </body>
 </html>
