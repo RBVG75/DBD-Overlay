@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedouble/tauri/main/crates/tauri-utils/schema/capabilities.json",
   "identifier": "default",
-  "description": "Default capabilities for overlay stopwatch",
-  "windows": ["main"],
+  "description": "Default capabilities for DBD Overlay",
+  "windows": ["main", "settings"],
   "permissions": [
     "core:default",
     "core:window:default",

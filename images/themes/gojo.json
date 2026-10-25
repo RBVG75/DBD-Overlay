@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "id": "gojo",
+  "name": "Gojo Satoru",
+  "palette": { "primary": "#3E9FFF", "secondary": "#FFFFFF", "accent": "#0A0A0A", "background": "#050B14", "surface": "#0D1828", "text": "#FFFFFF", "muted": "#AFC7E6" },
+  "typography": { "family": "'Segoe UI Variable Display', 'Segoe UI', sans-serif", "weight": 600, "letter_spacing": "0.02em" },
+  "effects": { "preset": "infinite", "intensity": 0.8, "particles": { "enabled": true, "count": 18, "mode": "sparkle", "speed": "slow" }, "alerts": { "enter": "glow-pulse", "exit": "fade", "duration_ms": 500 } },
+  "assets": { "main": "/assets/gojo/main.png", "icon": "/assets/gojo/icon.svg", "alert_icon": "/assets/gojo/alert-icon.svg" }
+}

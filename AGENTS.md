@@ -1,9 +1,10 @@
-# Overlay Stopwatch — Project Context
+# DBD Overlay — Project Context
 
-Overlay gamer stopwatch and stream HUD for Windows. Transparent always-on-top
-window with a stopwatch, a two-player scoreboard, highly customizable countdown
-timers, tracker-backed info panels (streak, records, win rate, kill rate…), a
-crosshair and global hotkeys, plus a click-through mode.
+DBD 1v1 overlay and stream HUD for Windows. The app has a transparent, always-on-top
+overlay window plus a separate native settings window. The overlay contains two
+independent player timers, a two-player scoreboard, countdown timers,
+tracker-backed info panels, DBD draw modes/renderers, a crosshair, global hotkeys,
+and click-through/edit modes.
 
 ## Tech Stack
 - **Frontend**: Vanilla JS ES modules + CSS + HTML, bundled with Vite
@@ -25,19 +26,31 @@ src/
     ├── stats.js            → Trackers (counters, W/L, text), records, streak chaining, formula parser
     ├── panels.js           → Info panels: rows, pages, rotation, skins, portraits
     ├── catalog.js          → Generated list of the 44 killer and 54 survivor portraits
-    ├── stopwatch.js        → Stopwatch widget (display, laps, skins)
+    ├── match-timers.js     → Two independent monotonic 1v1 timers + auto-score
+    ├── stopwatch.js        → Legacy standalone stopwatch module; main uses match-timers.js
     ├── scoreboard.js       → Two-player scoreboard
     ├── crosshair.js        → Crosshair shapes
-    ├── widgets.js          → Anchor placement + drag-to-move
+    ├── widgets.js          → Anchor placement, drag-to-move, direct resize handles
     ├── hotkeys.js          → Hotkey capture (reads `event.code`, layout independent)
     ├── controls.js         → Form-control factory for the settings panel
-    └── settings.js         → Settings panel: tabs, pages, live preview
+    ├── settings.js         → Separate settings window: 1v1 quick screen + advanced pages
+    ├── game-tools.js       → Draw room + "Pool y reglas" dialogs, opened from overlay toolbar
+    ├── game-data.js        → Perk/killer catalogues from `virtual:perk-assets`, DEFAULT_GAME_TOOLS
+    ├── draw-controller.js  → getPool → start → draw → reveal, cancellation by sequence
+    ├── draw-combinations.js→ Recommended renderer per game mode; renderers may restrict supported modes
+    ├── games/              → One `*.game.js` per draw mode (random-killer, random-perk, killer-and-perks)
+    └── renderers/          → One `*.renderer.js` per animation (12 renderers, auto-registered)
+src/data/
+├── killers.json            → Killer catalogue used by `catalog.js`
+└── perks.json              → fileAliases, displayNames, labelOverrides, byKiller
 src-tauri/
 ├── tauri.conf.json         → Window, permissions, build config
 ├── Cargo.toml
 └── src/
     ├── main.rs             → Commands, global hotkey registration, window placement, tray
     └── config.rs           → AppConfig/CountdownConfig, atomic JSON save/load, v1 migration
+docs/
+└── draw-renderers-roadmap.md → Draw contracts, presentation requirements, pending renderer catalogue
 ```
 
 ## Key Architecture
@@ -69,9 +82,17 @@ because it only acts when the geometry differs from the target.
 - **No `data-tauri-drag-region`**: the window covers the screen, so dragging it
   would displace the whole overlay. Widgets are moved *inside* the page by
   `js/widgets.js`, and the position is stored as anchor + offset.
+- The overlay window label is `main`, title **DBD Overlay**,
+  and `skipTaskbar` is false so OBS can enumerate/capture it as a window. It is
+  transparent, undecorated and always on top. The separate `settings` window is
+  decorated, opaque and not always on top; it loads `index.html?window=settings`.
+- `main.js` branches on `?window=settings`: only `main` fits the monitor and
+  handles global hotkey events. The settings window hides all overlay surfaces.
+  Use the overlay toolbar's ruleta button to open draw modes in the stream window;
+  keep that action out of the settings dashboard.
 
 ### Configuration
-`config.json` lives in `%APPDATA%/com.overlay.stopwatch/`. Rust only types the
+`config.json` lives in `%APPDATA%/com.dbdoverlay.app/`. Rust only types the
 parts it needs and passes the rest through:
 
 ```rust
@@ -79,13 +100,20 @@ struct AppConfig {
     version: u32,
     hotkeys: BTreeMap<String, String>,   // action id -> combination
     countdowns: Vec<CountdownConfig>,    // { hotkey, #[serde(flatten)] extra }
-    #[serde(flatten)] extra: Map<String, Value>,  // interface/stopwatch/scoreboard/crosshair
+    #[serde(flatten)] extra: Map<String, Value>,  // frontend sections incl. match_timers
 }
 ```
 
 **So adding a frontend option needs no Rust change.** Add it to the matching
 default object in `js/defaults.js`, give it a normalizer rule, and add a control
 in `js/settings.js`.
+
+The frontend config format is version 3. `migrateLegacy()` must preserve every
+frontend-owned section it does not type in Rust, especially `match_timers`; its
+normalizer is the source of frontend defaults and validation. Old v2 timer
+thresholds of 25 seconds were the previous default and migrate to the current
+5-second default. Do not drop `match_timers` while rebuilding the migrated
+object, or the next load will reset active player, timer values and auto-score.
 
 Both sides migrate v1 files (flat `hotkey_*` keys, `line_width`/`line_color`
 countdowns) by merging: modern values win, legacy values fill the gaps.
@@ -172,6 +200,95 @@ a transform — keeping the timer's own transform free for animations. Widgets u
 `positionWidget()` from `js/widgets.js`, which resolves the same nine anchors to
 `top/left/right/bottom` + a translate.
 
+### DBD 1v1 timers, editing and window sync
+
+- `match-timers.js` uses `performance.now()` plus accumulated milliseconds for
+  each player. `F1` toggles the selected timer and `F2` swaps the active player.
+  Running timers are stored as paused snapshots; restart never resumes against a
+  stale monotonic timestamp.
+- Auto-score is on by default with a 5-second threshold. It compares one captured
+  pause from each player once both are paused and both meet the threshold; greater
+  elapsed time earns one point, a tie does not. Starting from stopped or resetting
+  clears both pending pause candidates.
+- Automatic points route through `scoreboard.addPoint()` so the visible score,
+  autosave and settings-window sync use the same path as manual score changes.
+- Settings edits emit `config-live-update` to `main` immediately and are also
+  debounced to `save_config`. Overlay runtime changes broadcast back so a pending
+  settings autosave cannot write stale scores/timer state over newer values.
+- `gameTools.setConfig()` normalizes and compares the incoming config before
+  canceling an active draw. `save_config` emits `config-updated` even for the
+  settings autosave; reapplying unchanged `game_tools` must not cancel a draw.
+- Direct resize handles are attached to stopwatch, scoreboard, active countdown
+  instances and info panels only in edit mode. Scale is persisted on each widget
+  config (`stopwatch.scale`, `scoreboard.scale`, timer `scale`, panel `scale`).
+  `Terminar edición` is exposed in the overlay toolbar. Factory `start_locked`
+  is false; the overlay starts interactive and can be made click-through with the
+  lock button.
+
+### Draw room (sorteos)
+Two separate dialogs: `#game-tools` (Sala de sorteos — selectors, preview, run
+button, `.draw-stage`) and `#game-tools-config` (Pool y reglas — pools, search,
+custom perks, perk count). `js/draw-controller.js` runs
+`mode.getPool(request)` → `renderer.start(pool)` → `mode.draw(request)` →
+`renderer.reveal(result)` and cancels by sequence, so an aborted draw can never
+write a stale result. Game modes (`js/games/*.game.js`) own the rules;
+renderers (`js/renderers/*.renderer.js`) own the animation only. Adding either
+one is just a new file — both are auto-registered from their folder.
+
+Config lives in `config.game_tools` and is normalized in `js/defaults.js`; the
+pools come from the asset folders, **not** from a hand-written list:
+`vite.config.js` indexes `images/perks_killers/` and `images/perks-survis/` into
+`virtual:perk-assets` (aliases grouped under one logical perk, `labelOverrides`
+and `byKiller` from `src/data/perks.json`).
+
+Renderers may declare `static modes = ['random-killer', ...]`; the overlay draw
+room filters by those modes and `draw-controller.js` validates them. Without `modes`,
+a renderer supports every draw mode. `RENDERER_GROUPS` in `js/game-tools.js`
+organizes the selector by families. The roulette and tournament bracket are
+killer-only; the portal supports modes with a killer. The roulette shows a
+zoomed, clipped wheel arc with a larger portrait and name in each sector.
+
+**Two standing presentation rules — every new renderer must honour them:**
+
+1. **Participants are shown with their icon, never as a number, initial or
+   generic symbol.** `item.image` is available for killers and perks alike. When
+   the pool is big, shrink the icon or spread the items over several
+   rings/levels; only fall back to the typographic mark while an image has not
+   loaded yet. On `<canvas>`, preload the sprites and clip them to the piece.
+2. **The final result always uses the split layout produced by
+   `renderResults()`** in `js/renderers/draw-renderer.js`: left column
+   `.draw-result-featured` with only the killer at `--card-scale: 2.6` (≈2× the
+   perks) filling the available height; right column `.draw-result-perks` with
+   the perks in a 2×2 grid of equal cells at `--card-scale: 1.3`.
+   `.draw-results[data-layout]` is `split` / `perks` / `featured`. Every inner
+   size of a card is `calc(px * var(--card-scale))`, so scaling a card keeps its
+   internals proportional — change the layout through the scale, never by
+   restyling the card. Below 680px the columns stack.
+
+`docs/draw-renderers-roadmap.md` holds the full contracts plus the catalogue of
+renderer styles still pending.
+
+Current renderer behaviors that are easy to regress:
+
+- Roulette's portraits are radial/outward: keep the slot's sector rotation and
+  do not counter-rotate the card content to horizontal/upright.
+- Race is `random-killer` only and renders at most 10 racers. The pool remains
+  untruncated; if a drawn winner was not in the displayed sample, replace one
+  lane so the winner is still visible.
+- List/tombola filters its animation pool to non-perk items when the incoming
+  pool contains killers and perks; the combined result animation cycles killers
+  and only reveals `result.items[0]` (the killer).
+- Spotlight scans decoys before converging its beams on the result. Portal is a
+  ground gate/pulse and character emergence, not a spinning flat ring.
+- Tournament uses generated bracket rounds, bye nodes, explicit “A elimina a B”
+  outcomes and red/green eliminated/advancing states. Match rows map to bracket
+  slots derived from the next-power-of-two participant count. Future-round
+  participants/outcomes stay hidden behind locked placeholders until the prior
+  round is complete. Preserve both spoiler gating and dynamic height/grid-row
+  mapping when changing its DOM or CSS.
+- Slot-machine strips use Web Animations API timing and cancel active animations
+  in `destroy()`. Keep `reducedMotion` as the explicit no-motion path.
+
 ## Build & Run
 ```bash
 npm run dev      # Vite dev server + Tauri dev window
@@ -194,5 +311,9 @@ npm run build    # Production build → .exe + .msi
 | Add a crosshair shape | `js/defaults.js` (POINTER_TYPES) → `styles.css` (`#crosshair[data-pointer=…]`) |
 | Add a settings page | `js/settings.js` (PAGES + builder function) |
 | Add a form control type | `js/controls.js`, `styles.css` |
+| Add a draw game mode | `js/games/<id>.game.js` (`getPool` + `draw`, auto-registered) → `js/draw-combinations.js` for the recommended renderer |
+| Add a draw animation | `js/renderers/<id>.renderer.js` (`start`/`reveal`/`preview`, auto-registered; optional `static modes`) → `styles.css`; keep the icons + `renderResults()` rules |
+| Change the draw result layout | `js/renderers/draw-renderer.js` (`renderResults`) → `styles.css` (`.draw-results[data-layout]`, `--card-scale`) |
+| Change the draw pools | `images/perks_killers/`, `images/perks-survis/`, `src/data/perks.json` → `vite.config.js` (`virtual:perk-assets`) → `js/game-data.js` |
 | Change window size/position | `main.rs` → `compute_rect()` / `apply_rect()` / `fit_overlay`, `tauri.conf.json` |
 | Add a Tauri command | `main.rs` → `#[tauri::command]` + `generate_handler![]` |

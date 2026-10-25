@@ -698,6 +698,7 @@ export function createTimerView(cfg) {
   root.className = 'timer';
   root.dataset.style = cfg.style;
   root.dataset.backdrop = cfg.backdrop;
+  root.style.scale = String((cfg.scale || 100) / 100);
   if (cfg.pulse_on_danger) root.dataset.pulse = 'on';
   if (cfg.shake_on_danger) root.dataset.shake = 'on';
 

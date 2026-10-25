@@ -19,16 +19,23 @@ import { createTimerView } from './timer-render.js';
 import { deepClone as deepCopy, formatClock } from './utils.js';
 
 const PAGES = [
-  { id: 'general', label: 'General', icon: '◆' },
+  { id: 'home', label: 'Inicio', icon: '⌂' },
   { id: 'data', label: 'Datos', icon: '✦' },
   { id: 'control', label: 'Control', icon: '☷' },
-  { id: 'trackers', label: 'Contadores avanzados', icon: '⧉' },
-  { id: 'panels', label: 'Paneles', icon: '▤' },
-  { id: 'timers', label: 'Temporizadores', icon: '◍' },
-  { id: 'stopwatch', label: 'Cronómetro', icon: '▣' },
-  { id: 'crosshair', label: 'Mira', icon: '✛' },
-  { id: 'scoreboard', label: 'Marcador', icon: '⊞' },
-  { id: 'hotkeys', label: 'Atajos', icon: '⌘' },
+  { id: 'design', label: 'Diseño del overlay', icon: '▤' },
+  { id: 'advanced', label: 'Avanzado', icon: '⚙' },
+  { id: 'help', label: 'Ayuda', icon: '?' },
+];
+
+const STREAM_THEMES = [
+  { id: 'gojo', label: 'Gojo Satoru' },
+  { id: 'sukuna', label: 'Sukuna' },
+  { id: 'choso', label: 'Choso' },
+  { id: 'geto', label: 'Geto Suguru' },
+  { id: 'naoya', label: 'Naoya Zenin' },
+  { id: 'akaza', label: 'Akaza' },
+  { id: 'kokushibo', label: 'Kokushibo' },
+  { id: 'naruto', label: 'Naruto' },
 ];
 
 function createPreview(container) {
@@ -90,7 +97,7 @@ export function createSettings(options) {
   const pagesEl = panel.querySelector('.settings-pages');
   const statusEl = panel.querySelector('.settings-status');
 
-  let currentPage = 'general';
+  let currentPage = 'home';
   let selectedTimer = 0;
   let selectedTracker = 0;
   let trackerSearch = '';
@@ -156,6 +163,166 @@ export function createSettings(options) {
 
   function apply() {
     onApply(draft);
+  }
+
+  function goTo(page) {
+    currentPage = page;
+    render();
+  }
+
+  function navButton(label, hint, page, icon) {
+    const button = el('button', 'stream-nav-card');
+    button.type = 'button';
+    button.append(
+      el('span', 'stream-nav-icon', icon),
+      el('strong', null, label),
+      el('span', null, hint),
+      el('b', null, 'Abrir →'),
+    );
+    button.addEventListener('click', () => goTo(page));
+    return button;
+  }
+
+  function backToDesign() {
+    const button = el('button', 'stream-back', '← Volver a Diseño del overlay');
+    button.type = 'button';
+    button.addEventListener('click', () => goTo('design'));
+    return button;
+  }
+
+  function pageHome() {
+    const page = el('div', 'settings-page home-page');
+    const score = draft.scoreboard;
+    const match = draft.match_timers;
+    const ui = draft.interface;
+    const hero = el('section', 'stream-hero');
+    hero.append(
+      el('div', 'data-kicker', 'OVERLAY 1V1 · CONTROL RÁPIDO'),
+      el('h2', 'data-title', 'Ajustes de partida'),
+      el('p', 'data-copy', 'Configura el marcador, los cronómetros y el aspecto del overlay desde esta ventana. OBS solo necesita capturar la ventana Overlay.'),
+    );
+    page.appendChild(hero);
+
+    function playerScoreRow(player) {
+      const row = el('div', 'settings-player-score-row');
+      const scoreKey = `player${player}_score`;
+      const scoreControls = el('div', 'settings-score-controls');
+      scoreControls.setAttribute('aria-label', `Puntuación del jugador ${player}`);
+      const output = el('output', 'settings-score-value', String(score[scoreKey]));
+      output.dataset.scorePlayer = String(player);
+      const changeScore = (kind) => {
+        score[scoreKey] = kind === 'reset' ? 0 : Math.max(0, Math.min(9999, score[scoreKey] + (kind === 'up' ? 1 : -1)));
+        output.value = String(score[scoreKey]);
+        output.textContent = String(score[scoreKey]);
+        apply();
+      };
+      for (const [kind, glyph, label] of [
+        ['up', '+', `Sumar un punto al jugador ${player}`],
+        ['reset', '↶', `Reiniciar puntos del jugador ${player}`],
+        ['down', '−', `Restar un punto al jugador ${player}`],
+      ]) {
+        const button = el('button', 'settings-score-button', glyph);
+        button.type = 'button';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.addEventListener('click', () => changeScore(kind));
+        scoreControls.appendChild(button);
+      }
+      scoreControls.appendChild(output);
+      row.append(
+        textField(`Jugador ${player}`, score[`player${player}_name`], { maxlength: 32 }, (value) => {
+          score[`player${player}_name`] = value;
+          apply();
+        }),
+        scoreControls,
+      );
+      return row;
+    }
+
+    page.appendChild(group('Jugadores y marcador', [
+      playerScoreRow(1),
+      playerScoreRow(2),
+      selectField('Cronómetro activo', match.active_player, [
+        { id: 1, label: score.player1_name || 'Jugador 1' },
+        { id: 2, label: score.player2_name || 'Jugador 2' },
+      ], (value) => { match.active_player = Number(value); apply(); }),
+      toggleField('Auto-puntuar al pausar ambos', match.auto_score, (value) => { match.auto_score = value; apply(); }, 'El punto va al jugador con el tiempo mayor.'),
+      numberField('Umbral de auto-puntuación', match.auto_score_threshold_seconds, { min: 0, max: 3600, suffix: 's' }, (value) => { match.auto_score_threshold_seconds = value; apply(); }),
+    ], { columns: 2 }));
+
+    page.appendChild(group('Acciones para la emisión', [
+      buttonRow([
+        { label: 'Editar datos sobre el overlay', onClick: () => options.onToggleOverlayEdit?.() },
+        { label: 'Reiniciar marcador', variant: 'danger', onClick: () => {
+          score.player1_score = 0;
+          score.player2_score = 0;
+          apply();
+          flash('Marcador a cero');
+        } },
+      ]),
+      rangeField('Escala del overlay', ui.ui_scale, { min: 60, max: 200, suffix: '%' }, (value) => { ui.ui_scale = value; apply(); }),
+      toggleField('Iniciar overlay bloqueado', ui.start_locked, (value) => { ui.start_locked = value; apply(); }, 'Bloquea los clics para que lleguen al juego.'),
+    ], { columns: 1 }));
+
+    page.appendChild(group('Atajos de partida', [
+      hotkeyField('Iniciar / pausar cronómetro activo', 'start', draft.hotkeys.start, 'F1 por defecto'),
+      hotkeyField('Cambiar jugador activo', 'swap_player', draft.hotkeys.swap_player, 'F2 por defecto'),
+      hotkeyField('Bloquear / desbloquear clics', 'lock', draft.hotkeys.lock, 'Activa el modo atravesable'),
+    ], { columns: 2, note: 'Los atajos se aplican al pulsar Guardar o automáticamente al terminar de editar.' }));
+    return page;
+  }
+
+  function pageDesign() {
+    const page = el('div', 'settings-page design-page');
+    const back = el('button', 'stream-back', '← Volver a opciones generales');
+    back.type = 'button';
+    back.addEventListener('click', () => goTo('home'));
+    page.appendChild(back);
+    const hero = el('section', 'data-hero');
+    hero.append(
+      el('div', 'data-kicker', 'DISEÑO DEL OVERLAY'),
+      el('h2', 'data-title', 'Decide qué ve tu audiencia'),
+      el('p', 'data-copy', 'Configura primero el bloque que quieres mostrar. Los detalles visuales quedan dentro de cada editor.'),
+    );
+    page.appendChild(hero);
+    const grid = el('div', 'stream-nav-grid stream-design-grid');
+    grid.append(
+      navButton('Paneles de información', 'Estadísticas, rachas, nombres y páginas', 'panels', '▤'),
+      navButton('Temporizadores', 'Cuenta atrás, alertas e imágenes', 'timers', '◍'),
+      navButton('Marcador', 'Jugadores, puntos y título de partida', 'scoreboard', '⊞'),
+      navButton('Cronómetro', 'Tiempo de partida y vueltas', 'stopwatch', '▣'),
+    );
+    page.appendChild(grid);
+    return page;
+  }
+
+  function pageAdvanced() {
+    const page = el('div', 'settings-page advanced-page');
+    const ui = draft.interface;
+    const hero = el('section', 'data-hero');
+    hero.append(
+      el('div', 'data-kicker', 'CONFIGURACIÓN AVANZADA'),
+      el('h2', 'data-title', 'Ajustes secundarios'),
+      el('p', 'data-copy', 'Estas opciones se mantienen disponibles, pero no necesitas tocarlas para empezar a emitir.'),
+    );
+    page.appendChild(hero);
+    page.appendChild(group('Tema del stream', [
+      selectField('Estética activa', ui.stream_theme, STREAM_THEMES, async (value) => {
+        ui.stream_theme = value;
+        apply();
+        if (options.onStreamThemeChange) await options.onStreamThemeChange(value);
+        flash(`Tema aplicado: ${(STREAM_THEMES.find((theme) => theme.id === value) || {}).label || value}`);
+      }, 'Se aplica al overlay sin cambiar la estética de los ajustes.'),
+    ], { columns: 1 }));
+    const grid = el('div', 'stream-nav-grid stream-design-grid');
+    grid.append(
+      navButton('Apariencia y pantalla', 'Tema, escala, monitor y comportamiento', 'general', '◆'),
+      navButton('Mira', 'Forma, color y visibilidad del puntero', 'crosshair', '✛'),
+      navButton('Atajos', 'Control global desde teclado', 'hotkeys', '⌘'),
+      navButton('Contadores avanzados', 'Fórmulas, récords y conexiones', 'trackers', '⧉'),
+    );
+    page.appendChild(grid);
+    return page;
   }
 
   // --- tabs -----------------------------------------------------------------
@@ -262,12 +429,29 @@ export function createSettings(options) {
         { label: 'Valores de fábrica', variant: 'danger', onClick: () => onResetDefaults() },
       ]),
     ]));
+    page.appendChild(group('Aplicación', [
+      buttonRow([
+        {
+          label: 'Cerrar la aplicación',
+          variant: 'danger',
+          onClick: async () => {
+            try {
+              await options.onExitApp?.();
+            } catch (error) {
+              flash('No se pudo cerrar la aplicación');
+              console.error(error);
+            }
+          },
+        },
+      ]),
+    ], { note: 'Cierra el overlay y finaliza la aplicación, también en la bandeja del sistema.' }));
     return page;
   }
 
   function pageStopwatch() {
     const sw = draft.stopwatch;
     const page = el('div', 'settings-page');
+    page.appendChild(backToDesign());
     const set = (key) => (v) => {
       sw[key] = v;
       apply();
@@ -352,7 +536,9 @@ export function createSettings(options) {
 
   function pageScoreboard() {
     const sb = draft.scoreboard;
+    const match = draft.match_timers;
     const page = el('div', 'settings-page');
+    page.appendChild(backToDesign());
     const set = (key) => (v) => {
       sb[key] = v;
       apply();
@@ -365,8 +551,8 @@ export function createSettings(options) {
         { id: 'bars', label: 'Barras' },
         { id: 'cards', label: 'Tarjetas' },
       ], set('style')),
-      textField('Jugador 1', sb.player1_name, { maxlength: 16 }, set('player1_name')),
-      textField('Jugador 2', sb.player2_name, { maxlength: 16 }, set('player2_name')),
+      textField('Jugador 1', sb.player1_name, { maxlength: 32 }, set('player1_name')),
+      textField('Jugador 2', sb.player2_name, { maxlength: 32 }, set('player2_name')),
       colorField('Color jugador 1', sb.accent1, set('accent1')),
       colorField('Color jugador 2', sb.accent2, set('accent2')),
       numberField('Tamaño de los números', sb.font_size, { min: 14, max: 96, suffix: 'px' }, set('font_size')),
@@ -381,6 +567,14 @@ export function createSettings(options) {
     ], { columns: 3 }));
 
     page.appendChild(group('Puntuación', [
+      toggleField('Puntuar automáticamente al pausar ambos cronómetros', match.auto_score, (value) => {
+        match.auto_score = value;
+        apply();
+      }, 'El punto se asigna al jugador con el tiempo mayor.'),
+      numberField('Umbral para auto-puntuación', match.auto_score_threshold_seconds, { min: 0, max: 3600, suffix: 's' }, (value) => {
+        match.auto_score_threshold_seconds = value;
+        apply();
+      }),
       buttonRow([
         { label: 'Reiniciar marcador', variant: 'danger', onClick: () => {
           sb.player1_score = 0;
@@ -408,6 +602,7 @@ export function createSettings(options) {
 
   function pageTimers() {
     const page = el('div', 'settings-page timers-page');
+    page.appendChild(backToDesign());
     const list = draft.countdowns;
     if (selectedTimer >= list.length) selectedTimer = Math.max(0, list.length - 1);
 
@@ -649,6 +844,21 @@ export function createSettings(options) {
     return template.saved ? buildSavedTemplate(template) : buildTemplate(template, draft.stats.trackers);
   }
 
+  function previewStats(built) {
+    const localTrackers = new Map(built.trackers.map((tracker) => [tracker.id, tracker]));
+    return {
+      get(id) {
+        return localTrackers.get(id) || options.stats.get(id);
+      },
+      get sessionSeconds() {
+        return options.stats.sessionSeconds;
+      },
+      values() {
+        return options.stats.values();
+      },
+    };
+  }
+
   function allTemplates() {
     return [...STATS_TEMPLATES, ...draft.stats.saved_templates.map((template) => ({ ...template, saved: true }))];
   }
@@ -665,6 +875,7 @@ export function createSettings(options) {
     apply();
     render();
     flash(`Plantilla «${template.label}» añadida`);
+    if (template.id === 'killer-streak' && options.onKillerStreakCreated) options.onKillerStreakCreated();
   }
 
   function appendTemplatePage(template, panelIndex = selectedPanel) {
@@ -838,7 +1049,7 @@ export function createSettings(options) {
       queueMicrotask(() => {
         if (!mini.isConnected) return;
         const built = buildAnyTemplate(template);
-        if (built.panels[0]) templatePreviews.push(mountPanel(mini, built.panels[0], options.stats, { rotate: false }));
+        if (built.panels[0]) templatePreviews.push(mountPanel(mini, built.panels[0], previewStats(built), { rotate: false }));
       });
     });
     templates.appendChild(templateGrid);
@@ -951,6 +1162,43 @@ export function createSettings(options) {
     panelsButton.addEventListener('click', () => { currentPage = 'panels'; render(); });
     manage.append(trackersButton, panelsButton);
     page.appendChild(manage);
+    return page;
+  }
+
+  function pageHelp() {
+    const page = el('div', 'settings-page help-page');
+    const intro = el('section', 'data-hero');
+    intro.append(
+      el('div', 'data-kicker', 'CENTRO DE AYUDA'),
+      el('h2', 'data-title', 'Preguntas frecuentes'),
+      el('p', 'data-copy', 'Respuestas rápidas para los problemas más habituales al configurar y usar el overlay.'),
+    );
+    page.appendChild(intro);
+
+    const questions = [
+      ['¿Por qué se abre Ajustes al iniciar?', 'Es intencional: el overlay cubre toda la pantalla y la primera vez necesitas saber cómo usarlo. Puedes cerrar Ajustes cuando termines; se abrirá de nuevo automáticamente en cada inicio para que nunca parezca que la aplicación bloqueó Windows.'],
+      ['¿Cómo oculto el overlay sin cerrarlo?', `Usa el atajo «${draft.hotkeys.toggle || 'Sin asignar'}» o pulsa el botón de mostrar/ocultar de la barra. El proceso sigue activo y puedes recuperarlo con la misma tecla.`],
+      ['¿Cómo dejo pasar los clics al juego?', `Activa el modo atravesable con «${draft.hotkeys.lock || 'Sin asignar'}» o con el botón del candado. Para volver a editar, usa la misma tecla otra vez.`],
+      ['¿Cómo creo un Killer y una racha?', 'Ve a Datos → Plantillas automáticas → Killer + racha y pulsa Crear panel. Se crean el personaje, la racha, el récord personal y el récord mundial conectados entre sí. La primera vez aparecerá una explicación guiada.'],
+      ['¿Cómo asigno teclas a una victoria o derrota?', 'Después de crear una plantilla, ve a Control o Contadores avanzados. Pulsa el campo de atajo, presiona la combinación deseada y suéltala. Pulsa Guardar para registrarla globalmente en Windows.'],
+      ['¿Cómo funciona la racha?', 'La racha sube al registrar una victoria y se reinicia al registrar una derrota. El récord personal guarda el valor máximo automáticamente. Deshacer permite corregir el último cambio.'],
+      ['¿Por qué mi atajo no funciona?', 'Comprueba que no esté siendo usado por otra aplicación o por otro atajo del overlay. Vuelve a capturarlo desde Atajos, evita combinaciones reservadas por Windows y pulsa Guardar. Algunas teclas pueden estar ocupadas por el juego o por software de terceros.'],
+      ['¿El overlay tapa el juego?', 'La ventana es transparente y está diseñada para cubrir toda la pantalla, pero sus widgets solo ocupan las posiciones configuradas. Usa Mostrar / ocultar para apartarlo o Modo atravesable para seguir haciendo clic en el juego.'],
+      ['¿Qué ocurre si cambio de resolución o monitor?', 'El overlay se reajusta automáticamente. En General puedes elegir el monitor actual o todas las pantallas y usar Reajustar ahora para comprobar el rectángulo cubierto.'],
+      ['¿Dónde se guardan mis cambios?', 'Los cambios se aplican al instante en pantalla, pero debes pulsar Guardar para conservarlos al reiniciar. Los contadores también se guardan automáticamente después de un pequeño retraso.'],
+      ['¿Cómo vuelvo a empezar?', 'En General → Restablecer puedes recuperar los valores de fábrica. Esto reemplaza la configuración actual; úsalo solo si quieres comenzar de nuevo.'],
+    ];
+    const list = el('div', 'faq-list');
+    questions.forEach(([question, answer], index) => {
+      const details = document.createElement('details');
+      details.className = 'faq-item';
+      if (index === 0) details.open = true;
+      const summary = document.createElement('summary');
+      summary.textContent = question;
+      details.append(summary, el('p', 'faq-answer', answer));
+      list.appendChild(details);
+    });
+    page.appendChild(list);
     return page;
   }
 
@@ -1451,6 +1699,7 @@ export function createSettings(options) {
   function pagePanels() {
     const list = draft.stats.panels;
     const page = el('div', 'settings-page');
+    page.appendChild(backToDesign());
 
     if (selectedPanel >= list.length) selectedPanel = Math.max(0, list.length - 1);
 
@@ -1702,9 +1951,12 @@ export function createSettings(options) {
   }
 
   const BUILDERS = {
+    home: pageHome,
     general: pageGeneral,
     data: pageData,
     control: pageControl,
+    design: pageDesign,
+    advanced: pageAdvanced,
     trackers: pageTrackers,
     panels: pagePanels,
     timers: pageTimers,
@@ -1712,6 +1964,7 @@ export function createSettings(options) {
     crosshair: pageCrosshair,
     scoreboard: pageScoreboard,
     hotkeys: pageHotkeys,
+    help: pageHelp,
   };
 
   function render() {
@@ -1737,6 +1990,14 @@ export function createSettings(options) {
   }
 
   panel.querySelector('.settings-close').addEventListener('click', () => onCloseRequest());
+  panel.querySelector('.settings-exit').addEventListener('click', async () => {
+    try {
+      await options.onExitApp?.();
+    } catch (error) {
+      flash('No se pudo cerrar la aplicación');
+      console.error(error);
+    }
+  });
   panel.querySelector('.settings-save').addEventListener('click', async () => {
     const button = panel.querySelector('.settings-save');
     button.disabled = true;
@@ -1755,9 +2016,33 @@ export function createSettings(options) {
 
   return {
     render,
-    goTo(page) {
-      currentPage = page;
-      render();
+    goTo,
+    syncRuntimeState(state) {
+      if (state.match_timers) Object.assign(draft.match_timers, state.match_timers);
+      if (state.stopwatch) draft.stopwatch.scale = state.stopwatch.scale;
+      if (state.scoreboard) draft.scoreboard.scale = state.scoreboard.scale;
+      if (Array.isArray(state.countdowns)) {
+        state.countdowns.forEach((timer, index) => {
+          if (draft.countdowns[index] && timer) draft.countdowns[index].scale = timer.scale;
+        });
+      }
+      if (state.stats && Array.isArray(state.stats.panels)) {
+        for (const panel of state.stats.panels) {
+          const local = draft.stats.panels.find((item) => item.id === panel.id);
+          if (local) local.scale = panel.scale;
+        }
+      }
+      if (state.scoreboard) {
+        for (const player of [1, 2]) {
+          const key = `player${player}_score`;
+          draft.scoreboard[key] = state.scoreboard[key];
+          const output = panel.querySelector(`[data-score-player="${player}"]`);
+          if (output) {
+            output.value = String(state.scoreboard[key]);
+            output.textContent = String(state.scoreboard[key]);
+          }
+        }
+      }
     },
     stopPreview() {
       if (preview) preview.stop();

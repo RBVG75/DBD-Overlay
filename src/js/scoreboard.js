@@ -63,12 +63,14 @@ export function createScoreboard({ root, onChange }) {
     root.style.setProperty('--sb-accent2', cfg.accent2);
     root.style.setProperty('--sb-size', `${cfg.font_size}px`);
     root.style.opacity = String(cfg.opacity / 100);
+    root.style.scale = String(cfg.scale / 100);
     title.classList.toggle('hidden', !cfg.show_title);
     paint();
   }
 
   return {
     applyConfig,
+    refresh: paint,
     addPoint(player) {
       bump(player, 1);
     },

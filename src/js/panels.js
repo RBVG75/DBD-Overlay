@@ -246,6 +246,7 @@ function defaultLabel(item, stats) {
 
 function buildPanel(panel, stats) {
   const root = el('div', 'info-panel');
+  root.dataset.panelId = panel.id;
   root.dataset.style = panel.style;
   root.dataset.layout = panel.layout;
   root.dataset.transition = panel.transition;

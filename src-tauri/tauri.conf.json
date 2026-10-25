@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedouble/tauri/main/crates/tauri-config-schema/schema.json",
-  "productName": "Overlay Stopwatch",
+  "productName": "DBD Overlay",
   "version": "1.0.0",
-  "identifier": "com.overlay.stopwatch",
+  "identifier": "com.dbdoverlay.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -16,14 +16,14 @@
     },
     "windows": [
       {
-        "title": "Overlay Stopwatch",
+        "title": "DBD Overlay",
         "width": 1920,
         "height": 1080,
         "resizable": false,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
-        "skipTaskbar": true,
+        "skipTaskbar": false,
         "focusable": true,
         "visible": true,
         "x": 0,

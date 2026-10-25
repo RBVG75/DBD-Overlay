@@ -9,7 +9,7 @@ use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::Emitter;
-use tauri::Manager;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri::PhysicalPosition;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -86,12 +86,57 @@ async fn disable_clickthrough(app: tauri::AppHandle) -> Result<(), String> {
 async fn save_config(app: tauri::AppHandle, config: AppConfig) -> Result<(), String> {
     config::save(&app, &config)?;
     reload_hotkeys(&app, &config);
+    let _ = app.emit("config-updated", ());
     Ok(())
+}
+
+#[tauri::command]
+async fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("settings") {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(
+        &app,
+        "settings",
+        WebviewUrl::App("index.html?window=settings".into()),
+    )
+    .title("DBD Overlay · Ajustes")
+    .inner_size(940.0, 760.0)
+    .min_inner_size(720.0, 600.0)
+    .resizable(true)
+    .decorations(true)
+    .transparent(false)
+    .always_on_top(false)
+    .skip_taskbar(false)
+    .visible(true)
+    .build()
+    .map(|_| ())
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn hide_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("settings") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn request_overlay_edit(app: tauri::AppHandle) {
+    let _ = app.emit("overlay-edit-request", ());
 }
 
 #[tauri::command]
 async fn load_config(app: tauri::AppHandle) -> Result<AppConfig, String> {
     config::load(&app)
+}
+
+#[tauri::command]
+fn exit_app(app: tauri::AppHandle) {
+    app.exit(0);
 }
 
 /// Releases every shortcut this app currently holds.
@@ -497,6 +542,12 @@ async fn fit_overlay(app: tauri::AppHandle, mode: Option<String>) -> Result<Scre
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
@@ -526,7 +577,7 @@ fn main() {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_ignore_cursor_events(false);
                 let _ = window.set_always_on_top(true);
-                let _ = window.set_skip_taskbar(true);
+                let _ = window.set_skip_taskbar(false);
                 // No `set_focus()` here on purpose: stealing focus at startup
                 // pulls the player out of a running game.
 
@@ -562,7 +613,7 @@ fn main() {
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .tooltip("Overlay Stopwatch")
+                .tooltip("DBD Overlay")
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "show" => {
                         let _ = app.emit("tray-show", ());
@@ -589,7 +640,11 @@ fn main() {
             disable_clickthrough,
             fit_overlay,
             save_config,
+            open_settings_window,
+            hide_settings_window,
+            request_overlay_edit,
             load_config,
+            exit_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

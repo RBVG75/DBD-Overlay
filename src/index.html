@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overlay Stopwatch</title>
+  <title>DBD Overlay · The Fog</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app">
+    <div id="theme-effects" aria-hidden="true"></div>
     <!-- Countdown timers and info panels live in nine screen anchors each,
          filled at runtime. -->
     <div id="timer-layer"></div>
@@ -17,44 +18,43 @@
     <section id="scoreboard" class="widget" aria-label="Marcador">
       <div class="sb-row">
         <div class="sb-side" data-player="1">
-          <input type="text" class="sb-name" id="player1-name" maxlength="16" aria-label="Nombre del jugador 1" />
+          <input type="text" class="sb-name" id="player1-name" maxlength="32" aria-label="Nombre del jugador 1" />
           <span class="sb-score" id="player1-score" role="button" tabindex="0" data-no-drag
                 title="Clic: +1 · Clic derecho: -1">0</span>
         </div>
         <span class="sb-sep">·</span>
         <div class="sb-side reverse" data-player="2">
+          <input type="text" class="sb-name" id="player2-name" maxlength="32" aria-label="Nombre del jugador 2" />
           <span class="sb-score" id="player2-score" role="button" tabindex="0" data-no-drag
                 title="Clic: +1 · Clic derecho: -1">0</span>
-          <input type="text" class="sb-name" id="player2-name" maxlength="16" aria-label="Nombre del jugador 2" />
         </div>
       </div>
       <input type="text" id="match-title" class="sb-title" placeholder="Título del enfrentamiento…" maxlength="48" />
     </section>
 
     <section id="stopwatch" class="widget" aria-label="Cronómetro">
-      <div class="sw-ring-wrap hidden">
-        <svg class="sw-ring" viewBox="0 0 100 100" aria-hidden="true">
-          <circle class="sw-ring-bg" cx="50" cy="50" r="44" />
-          <circle class="sw-ring-fg" cx="50" cy="50" r="44" />
-        </svg>
+      <div class="match-timers" aria-label="Cronómetros 1 contra 1">
+        <article class="match-timer" data-player="1">
+          <button class="match-player-select" data-action="select" data-player="1" type="button" aria-label="Seleccionar jugador 1"></button>
+          <output class="match-time" data-time="1">00:00.00</output>
+          <span class="match-status" data-status="1">LISTO</span>
+          <div class="match-actions">
+            <button class="sw-btn" data-action="toggle-player" data-player="1" type="button" aria-label="Iniciar, pausar o reanudar jugador 1">▶</button>
+            <button class="sw-btn danger" data-action="reset-player" data-player="1" type="button" aria-label="Reiniciar jugador 1">↺</button>
+          </div>
+        </article>
+        <button class="match-swap" data-action="swap" type="button" aria-label="Cambiar jugador activo" title="Cambiar jugador (F2)">⇄</button>
+        <article class="match-timer" data-player="2">
+          <button class="match-player-select" data-action="select" data-player="2" type="button" aria-label="Seleccionar jugador 2"></button>
+          <output class="match-time" data-time="2">00:00.00</output>
+          <span class="match-status" data-status="2">LISTO</span>
+          <div class="match-actions">
+            <button class="sw-btn" data-action="toggle-player" data-player="2" type="button" aria-label="Iniciar, pausar o reanudar jugador 2">▶</button>
+            <button class="sw-btn danger" data-action="reset-player" data-player="2" type="button" aria-label="Reiniciar jugador 2">↺</button>
+          </div>
+        </article>
       </div>
-      <div class="sw-display"></div>
-      <div class="sw-laps hidden"></div>
-      <div class="sw-controls">
-        <button class="sw-btn" data-action="start" type="button" title="Iniciar o pausar" aria-label="Iniciar o pausar">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 19 12 8 18.5z" /></svg>
-        </button>
-        <button class="sw-btn" data-action="pause" type="button" title="Pausar" aria-label="Pausar">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" /></svg>
-        </button>
-        <button class="sw-btn" data-action="lap" type="button" title="Vuelta" aria-label="Vuelta">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v2.2H4zm0 3.9h16v2.2H4zm0 3.9h11v2.2H4z" /></svg>
-        </button>
-        <button class="sw-btn danger" data-action="reset" type="button" title="Reiniciar" aria-label="Reiniciar">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7 7 0 1 0 6.7 9h-2.3A4.8 4.8 0 1 1 12 7.2c1.3 0 2.5.5 3.4 1.4L13 11h6V5l-2 2a7 7 0 0 0-5-2z" /></svg>
-        </button>
-      </div>
-      <div class="sw-status" data-state="ready"><span class="sw-status-text">LISTO</span></div>
+      <div class="sw-status match-active-status"><span class="sw-status-text">F1 iniciar / pausar · F2 cambiar</span></div>
     </section>
 
     <div id="crosshair" aria-hidden="true">
@@ -76,11 +76,72 @@
       </button>
       <button id="btn-edit" class="tool-btn" type="button" title="Editar datos sobre el overlay" aria-label="Editar datos sobre el overlay">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.8-.8 3.9 3.9-.8L18.7 8.3l-3-3zM20.1 6.9a1.5 1.5 0 0 0 0-2.1l-.9-.9a1.5 1.5 0 0 0-2.1 0l-.7.7 3 3z" /></svg>
+        <span class="edit-exit-label">Terminar edición</span>
+      </button>
+      <button id="btn-game-tools" class="tool-btn" type="button" title="Ruletas y modos de juego" aria-label="Abrir ruletas y modos de juego" aria-haspopup="dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 6.8 3.8l-6.8 4V4m-2 1.3v7.2l-6.2 3.7A8 8 0 0 1 10 5.3m-7.1 13 6.2-3.7 6.9 4A8 8 0 0 1 2.9 18.3m14.8-.7-6.2-3.6 6.8-4a8 8 0 0 1-.6 7.6" /></svg>
       </button>
       <button id="btn-settings" class="tool-btn" type="button" title="Ajustes" aria-label="Abrir ajustes">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 8.4a3.6 3.6 0 1 0 3.6 3.6A3.6 3.6 0 0 0 12 8.4m8.4 3.6a8.4 8.4 0 0 1-.1 1.2l2 1.6-1.9 3.3-2.4-1a8.5 8.5 0 0 1-2 1.2l-.4 2.5h-3.8l-.4-2.5a8.5 8.5 0 0 1-2-1.2l-2.4 1-1.9-3.3 2-1.6a8.4 8.4 0 0 1 0-2.4l-2-1.6L5 5.9l2.4 1a8.5 8.5 0 0 1 2-1.2l.4-2.5h3.8l.4 2.5a8.5 8.5 0 0 1 2 1.2l2.4-1 1.9 3.3-2 1.6a8.4 8.4 0 0 1 .1 1.2" /></svg>
       </button>
     </div>
+
+    <div id="game-tools-scrim" class="game-tools-scrim hidden"></div>
+    <section id="game-tools" class="game-tools hidden" role="dialog" aria-modal="true" aria-labelledby="game-tools-title" aria-describedby="game-tools-description">
+      <header class="game-tools-head">
+        <div>
+          <p class="game-tools-kicker">THE FOG // STREAMER ARCADE</p>
+          <h2 id="game-tools-title">Sala de sorteos</h2>
+          <p id="game-tools-description">Elige una combinación y lanza el sorteo para el stream.</p>
+        </div>
+        <div class="draw-window-actions">
+          <button id="btn-draw-config" class="draw-config-open" type="button" aria-haspopup="dialog" aria-expanded="false">⚙ Pool y reglas</button>
+          <button class="game-tools-close" type="button" aria-label="Cerrar sala de sorteos">&times;</button>
+        </div>
+      </header>
+      <div class="draw-tool-config">
+        <div class="draw-selectors">
+          <label class="draw-field" for="draw-game-mode">
+            <span>Tipo de juego</span>
+            <select id="draw-game-mode"></select>
+          </label>
+          <label class="draw-field" for="draw-renderer">
+            <span>Estilo de visualización</span>
+            <select id="draw-renderer"></select>
+          </label>
+        </div>
+        <div class="draw-preview-row">
+          <div id="draw-renderer-preview" class="draw-renderer-preview"></div>
+          <div class="draw-preview-copy">
+            <strong id="draw-renderer-name"></strong>
+            <span id="draw-renderer-description"></span>
+          </div>
+        </div>
+        <button id="draw-run" class="game-roll-button" type="button">
+          <span class="game-roll-icon" aria-hidden="true">✦</span>
+          <span>Sortear ahora</span>
+        </button>
+      </div>
+      <section class="draw-result-shell" aria-label="Resultado del sorteo">
+        <div id="draw-stage" class="draw-stage"></div>
+      </section>
+      <p class="game-tools-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <div id="game-config-scrim" class="game-config-scrim hidden"></div>
+    <section id="game-tools-config" class="game-tools-config hidden" role="dialog" aria-modal="true" aria-labelledby="draw-config-title">
+      <header class="game-config-head">
+        <div>
+          <p class="game-tools-kicker">LOADOUT // CONTROL</p>
+          <h2 id="draw-config-title">Pool y reglas</h2>
+          <p>Activa solo los killers y perks que quieras incluir.</p>
+        </div>
+        <button id="btn-draw-config-close" class="game-tools-close" type="button" aria-label="Cerrar configuración del sorteo">&times;</button>
+      </header>
+      <div id="draw-mode-options" class="draw-mode-options"></div>
+      <div id="draw-pool-options" class="draw-pool-options"></div>
+      <p class="game-config-autosave">Los cambios se guardan automáticamente.</p>
+    </section>
 
     <div id="settings-scrim" class="hidden"></div>
 
@@ -88,9 +149,16 @@
       <header class="settings-head">
         <div class="settings-title">
           <span class="settings-dot"></span>
-          <span>Ajustes del overlay</span>
+          <div>
+            <span>Ajustes del overlay</span>
+            <small class="settings-subtitle">STREAM HUD // CONTROL ROOM</small>
+          </div>
         </div>
-        <button class="settings-close" type="button" aria-label="Cerrar ajustes">&times;</button>
+        <div class="settings-head-actions">
+          <button class="settings-exit" type="button" title="Salir y cerrar la aplicación">⏻ Salir</button>
+          <button id="btn-tutorial" class="settings-help" type="button">¿Cómo se usa?</button>
+          <button class="settings-close" type="button" aria-label="Cerrar ajustes">&times;</button>
+        </div>
       </header>
       <div class="settings-body">
         <nav class="settings-tabs" aria-label="Secciones"></nav>
@@ -104,6 +172,20 @@
         </div>
       </footer>
     </div>
+
+    <dialog id="tutorial-dialog" class="tutorial-dialog" aria-labelledby="tutorial-title">
+      <div class="tutorial-mark" aria-hidden="true">✦</div>
+      <p id="tutorial-kicker" class="tutorial-kicker">SOBREVIVE A LA NIEBLA</p>
+      <p id="tutorial-step" class="tutorial-step">RECORRIDO 1 / 7</p>
+      <h1 id="tutorial-title">Tu overlay está listo</h1>
+      <p id="tutorial-intro" class="tutorial-intro"></p>
+      <div id="tutorial-body" class="tutorial-body"></div>
+      <div class="tutorial-progress"><span id="tutorial-progress-bar"></span></div>
+      <div class="tutorial-actions">
+        <button id="tutorial-prev" class="tutorial-secondary" type="button">Anterior</button>
+        <button id="tutorial-next" class="tutorial-primary" type="button">Siguiente</button>
+      </div>
+    </dialog>
 
     <div id="toast" role="status"></div>
   </div>

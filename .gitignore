@@ -5,5 +5,9 @@ src-tauri/target/
 *.log
 .DS_Store
 Thumbs.db
+_to_delete/
+baraja_interactiva_v2.html
+Decisive.webp
+Endurance.webp
 Decisive.webp
 Endurance.webp

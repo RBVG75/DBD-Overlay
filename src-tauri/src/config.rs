@@ -29,10 +29,10 @@ pub struct CustomHotkey {
 
 /// Actions the Rust side registers global shortcuts for. Each one is emitted as
 /// `hotkey-<id>` so the frontend can add handlers freely.
-pub const HOTKEY_ACTIONS: [&str; 19] = [
+pub const HOTKEY_ACTIONS: [&str; 20] = [
     "start", "pause", "reset", "lap", "toggle", "settings", "lock", "crosshair",
     "stopwatch", "scoreboard", "countdowns", "panels", "all", "next_page",
-    "session_reset", "clear_timers", "score1_up", "score2_up", "score_reset",
+    "session_reset", "clear_timers", "score1_up", "score2_up", "score_reset", "swap_player",
 ];
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -56,7 +56,8 @@ fn default_version() -> u32 {
 
 fn default_hotkeys() -> BTreeMap<String, String> {
     let pairs = [
-        ("start", "Ctrl+Shift+F1"),
+        ("start", "F1"),
+        ("swap_player", "F2"),
         ("pause", ""),
         ("reset", "Ctrl+Shift+F3"),
         ("lap", ""),

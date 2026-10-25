@@ -1,0 +1,42 @@
+{
+  "labelOverrides": {
+    "killer": [
+    "A Nurse’s Calling", "Bamboozle", "Barbecue & Chilli", "Bitter Murmur", "Corrupt Intervention",
+    "Dead Man’s Switch", "Discordance", "Enduring", "Eruption", "Fearmonger", "Franklin’s Demise",
+    "Friends ’til the End", "Grim Embrace", "Hex: Devour Hope", "Hex: No One Escapes Death",
+    "Hex: Ruin", "Hex: Undying", "Jolt", "Lethal Pursuer", "Lightborn", "No Way Out",
+    "Nowhere to Hide", "Pain Resonance", "Pop Goes the Weasel", "Save the Best for Last",
+    "Sloppy Butcher", "Spies from the Shadows", "Starstruck", "Thrilling Tremors", "Tinkerer",
+    "Unrelenting", "Whispers", "Hex: Face the Darkness", "Rapid Brutality", "Coup de Grâce", "Hubris"
+    ],
+    "survivor": [
+    "Adrenaline", "Alert", "Balanced Landing", "Bond", "Borrowed Time", "Breakdown", "Calm Spirit",
+    "Dead Hard", "Deja Vu", "Deliverance", "Decisive Strike", "Empathy", "Fast Track", "Flashbang",
+    "Head On", "Hope", "Inner Healing", "Iron Will", "Kindred", "Lithe", "Off the Record",
+    "Prove Thyself", "Quick & Quiet", "Resilience", "Sprint Burst", "Unbreakable", "Windows of Opportunity",
+    "We’ll Make It", "Distortion", "Lightweight", "No One Left Behind", "Pharmacy", "Plot Twist",
+    "Premonition", "Saboteur", "Self-Care", "Small Game", "Tenacity", "Urban Evasion"
+    ]
+  },
+  "fileAliases": {
+    "bbqandchili": "barbecuechilli",
+    "deadmanswitch": "deadmansswitch",
+    "hexbloodfavor": "hexbloodfavour",
+    "franklinsloss": "franklinsdemise",
+    "friendstilltheend": "friendstiltheend",
+    "devourhope": "hexdevourhope",
+    "ruin": "hexruin",
+    "quickandquiet": "quickquiet",
+    "mindbreaker": "fearmonger",
+    "surge": "jolt",
+    "innerstrength": "innerhealing",
+    "secondwind": "renewal"
+  },
+  "displayNames": {
+    "hexbloodfavour": "Hex: Blood Favor",
+    "hexhivemind": "Hex: Hive Mind",
+    "hexnooneescapesdeath": "Hex: No One Escapes Death",
+    "renewal": "Renewal"
+  },
+  "byKiller": {}
+}

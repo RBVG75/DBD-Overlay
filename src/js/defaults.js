@@ -2,6 +2,10 @@
 
 import { clampInt, clampNum, hex, isHex } from './utils.js';
 import { CATALOG_IDS, catalogEntries } from './catalog.js';
+import {
+  DEFAULT_GAME_TOOLS, KILLER_PERKS, LEGACY_KILLER_PERKS,
+  LEGACY_SURVIVOR_PERKS, SURVIVOR_PERKS,
+} from './game-data.js';
 import { slugify } from './stats.js';
 
 // ---------------------------------------------------------------------------
@@ -127,6 +131,7 @@ export const STOPWATCH_STYLES = [
 ];
 
 export const THEMES = [
+  { id: 'dbd', label: 'La Niebla (DBD)', accent: '#c52d35', surface: '#100d0d' },
   { id: 'emerald', label: 'Esmeralda', accent: '#00ff88', surface: '#0a0c12' },
   { id: 'cyan', label: 'Cian', accent: '#22d3ee', surface: '#07111a' },
   { id: 'violet', label: 'Violeta', accent: '#a78bfa', surface: '#0e0a1a' },
@@ -137,6 +142,7 @@ export const THEMES = [
 
 export const HOTKEY_ACTIONS = [
   { id: 'start', label: 'Iniciar / pausar', hint: 'Alterna el cronómetro' },
+  { id: 'swap_player', label: 'Cambiar jugador activo', hint: 'Alterna entre los dos cronómetros' },
   { id: 'pause', label: 'Pausar', hint: 'Solo pausa' },
   { id: 'reset', label: 'Reiniciar', hint: 'Vuelve a cero' },
   { id: 'lap', label: 'Vuelta', hint: 'Guarda una vuelta' },
@@ -158,7 +164,8 @@ export const HOTKEY_ACTIONS = [
 ];
 
 export const DEFAULT_HOTKEYS = {
-  start: 'Ctrl+Shift+F1',
+  start: 'F1',
+  swap_player: 'F2',
   pause: '',
   reset: 'Ctrl+Shift+F3',
   lap: '',
@@ -190,9 +197,9 @@ export const DEFAULT_TIMER = {
   style: 'ring',
   size: 130,
   thickness: 6,
-  color: '#00ff88',
-  color2: '#22d3ee',
-  track_color: '#ffffff',
+  color: '#c52d35',
+  color2: '#b7b1a8',
+  track_color: '#eee8e1',
   track_opacity: 12,
   direction: 'drain',
   spin: 'cw',
@@ -207,8 +214,8 @@ export const DEFAULT_TIMER = {
   label_position: 'bottom',
   warn_at: 10,
   danger_at: 5,
-  warn_color: '#ffb020',
-  danger_color: '#ff4466',
+  warn_color: '#d99b45',
+  danger_color: '#e0524d',
   pulse_on_danger: true,
   shake_on_danger: false,
   glow: 35,
@@ -232,6 +239,7 @@ export const DEFAULT_TIMER = {
   segments: 12,
   show_progress_text: false,
   allow_multiple: true,
+  scale: 100,
 };
 
 export const TIMER_PRESETS = [
@@ -275,6 +283,7 @@ export function normalizeTimer(raw = {}) {
     seconds: clampInt(t.seconds, 1, 86400, DEFAULT_TIMER.seconds),
     style: TIMER_STYLE_IDS.includes(t.style) ? t.style : DEFAULT_TIMER.style,
     size: clampInt(t.size, 48, 640, DEFAULT_TIMER.size),
+    scale: clampInt(t.scale, 50, 250, DEFAULT_TIMER.scale),
     thickness: clampNum(t.thickness, 1, 40, DEFAULT_TIMER.thickness),
     color: hex(t.color, DEFAULT_TIMER.color),
     color2: hex(t.color2, DEFAULT_TIMER.color2),
@@ -333,7 +342,7 @@ export const DEFAULT_STOPWATCH = {
   font_family: 'mono',
   font_size: 48,
   font_weight: 300,
-  color: '#00ff88',
+  color: '#c52d35',
   separator_color: '#7c8698',
   show_hours: false,
   show_centiseconds: true,
@@ -353,6 +362,7 @@ export const DEFAULT_STOPWATCH = {
   offset_x: 16,
   offset_y: 10,
   opacity: 100,
+  scale: 100,
 };
 
 export const DEFAULT_SCOREBOARD = {
@@ -363,20 +373,21 @@ export const DEFAULT_SCOREBOARD = {
   player2_score: 0,
   match_title: '',
   style: 'glass',
-  accent1: '#00ff88',
-  accent2: '#22d3ee',
+  accent1: '#c52d35',
+  accent2: '#b7b1a8',
   font_size: 30,
   show_title: true,
   position: 'top-left',
   offset_x: 16,
   offset_y: 10,
   opacity: 100,
+  scale: 100,
 };
 
 export const DEFAULT_CROSSHAIR = {
   enabled: true,
   pointer_type: 'cross',
-  color: '#00ff88',
+  color: '#c52d35',
   size: 14,
   thickness: 2,
   gap: 4,
@@ -392,9 +403,10 @@ export const SCREEN_MODES = [
 ];
 
 export const DEFAULT_INTERFACE = {
-  theme: 'emerald',
+  theme: 'dbd',
+  stream_theme: 'gojo',
   screen_mode: 'monitor',
-  accent_color: '#00ff88',
+  accent_color: '#c52d35',
   ui_scale: 100,
   panel_opacity: 96,
   show_toolbar: true,
@@ -403,17 +415,29 @@ export const DEFAULT_INTERFACE = {
   start_locked: false,
 };
 
+export const DEFAULT_MATCH_TIMERS = {
+  active_player: 1,
+  auto_score: true,
+  auto_score_threshold_seconds: 5,
+  timers: {
+    1: { status: 'stopped', elapsed_ms: 0 },
+    2: { status: 'stopped', elapsed_ms: 0 },
+  },
+};
+
 export const DEFAULT_CONFIG = {
-  version: 2,
+  version: 3,
   hotkeys: { ...DEFAULT_HOTKEYS },
   interface: { ...DEFAULT_INTERFACE },
+  game_tools: { ...DEFAULT_GAME_TOOLS },
   stopwatch: { ...DEFAULT_STOPWATCH },
   scoreboard: { ...DEFAULT_SCOREBOARD },
+  match_timers: { ...DEFAULT_MATCH_TIMERS },
   crosshair: { ...DEFAULT_CROSSHAIR },
   stats: { session_reset_hotkey: '', trackers: [], panels: [], groups: [], saved_templates: [] },
   countdowns: [
-    normalizeTimer({ label: 'Corto', hotkey: 'J', seconds: 15, style: 'ring', color: '#00ff88', offset_y: -80 }),
-    normalizeTimer({ label: 'Largo', hotkey: 'K', seconds: 300, style: 'ring-minute', color: '#22d3ee', text_format: 'mm:ss', offset_y: 80 }),
+    normalizeTimer({ label: 'Corto', hotkey: 'J', seconds: 15, style: 'ring', color: '#c52d35', offset_y: -80 }),
+    normalizeTimer({ label: 'Largo', hotkey: 'K', seconds: 60, style: 'ring-minute', color: '#b7b1a8', text_format: 'mm:ss', offset_y: 80 }),
   ],
 };
 
@@ -466,14 +490,15 @@ export function normalizeStopwatch(raw) {
     offset_x: intIn(-4000, 4000),
     offset_y: intIn(-4000, 4000),
     opacity: intIn(10, 100),
+    scale: intIn(50, 250),
   });
 }
 
 export function normalizeScoreboard(raw) {
   return normalizeSection(DEFAULT_SCOREBOARD, raw, {
     visible: bool,
-    player1_name: (v, d) => (typeof v === 'string' ? v.slice(0, 16) : d),
-    player2_name: (v, d) => (typeof v === 'string' ? v.slice(0, 16) : d),
+    player1_name: (v, d) => (typeof v === 'string' ? v.slice(0, 32) : d),
+    player2_name: (v, d) => (typeof v === 'string' ? v.slice(0, 32) : d),
     player1_score: intIn(0, 9999),
     player2_score: intIn(0, 9999),
     match_title: (v, d) => (typeof v === 'string' ? v.slice(0, 48) : d),
@@ -486,6 +511,7 @@ export function normalizeScoreboard(raw) {
     offset_x: intIn(-4000, 4000),
     offset_y: intIn(-4000, 4000),
     opacity: intIn(10, 100),
+    scale: intIn(50, 250),
   });
 }
 
@@ -507,6 +533,7 @@ export function normalizeCrosshair(raw) {
 export function normalizeInterface(raw) {
   return normalizeSection(DEFAULT_INTERFACE, raw, {
     theme: oneOf(THEMES.map((t) => t.id).concat('custom')),
+    stream_theme: str,
     screen_mode: oneOf(SCREEN_MODES.map((m) => m.id)),
     accent_color: color,
     ui_scale: intIn(60, 200),
@@ -516,6 +543,62 @@ export function normalizeInterface(raw) {
     reduce_motion: bool,
     start_locked: bool,
   });
+}
+
+function normalizeSelection(value, allowed, fallback) {
+  if (!Array.isArray(value)) return [...fallback];
+  const selected = new Set(value.filter((item) => typeof item === 'string' && allowed.includes(item)));
+  // Each randomizer needs at least one possible result; corrupted or stale
+  // configs fall back to the safe default selection instead of a dead control.
+  return selected.size ? allowed.filter((item) => selected.has(item)) : [...fallback];
+}
+
+function normalizeCustomPerks(value, builtins) {
+  if (!Array.isArray(value)) return [];
+  const blocked = new Set(builtins.map((name) => name.toLocaleLowerCase('es')));
+  const seen = new Set();
+  return value
+    .filter((name) => typeof name === 'string')
+    .map((name) => name.trim().slice(0, 56))
+    .filter((name) => {
+      const key = name.toLocaleLowerCase('es');
+      if (!key || blocked.has(key) || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 100);
+}
+
+export function normalizeGameTools(raw) {
+  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const killerIds = catalogEntries('killers').map(({ id }) => id);
+  const survivorIds = catalogEntries('survivors').map(({ id }) => id);
+  const customKillerPerks = normalizeCustomPerks(src.custom_killer_perks, KILLER_PERKS);
+  const customSurvivorPerks = normalizeCustomPerks(src.custom_survivor_perks, SURVIVOR_PERKS);
+  const idString = (value, fallback) => (typeof value === 'string' && /^[a-z][a-z0-9-]{0,63}$/.test(value) ? value : fallback);
+  const wasOldKillerDefault = Array.isArray(src.killer_perks)
+    && src.killer_perks.length === LEGACY_KILLER_PERKS.length
+    && LEGACY_KILLER_PERKS.every((perk) => src.killer_perks.includes(perk));
+  const wasOldSurvivorDefault = Array.isArray(src.survivor_perks)
+    && src.survivor_perks.length === LEGACY_SURVIVOR_PERKS.length
+    && LEGACY_SURVIVOR_PERKS.every((perk) => src.survivor_perks.includes(perk));
+  return {
+    game_mode: idString(src.game_mode, DEFAULT_GAME_TOOLS.game_mode),
+    renderer: idString(src.renderer, DEFAULT_GAME_TOOLS.renderer),
+    killer_ids: normalizeSelection(src.killer_ids, killerIds, DEFAULT_GAME_TOOLS.killer_ids),
+    survivor_ids: normalizeSelection(src.survivor_ids, survivorIds, DEFAULT_GAME_TOOLS.survivor_ids),
+    custom_killer_perks: customKillerPerks,
+    custom_survivor_perks: customSurvivorPerks,
+    killer_perks: wasOldKillerDefault
+      ? [...KILLER_PERKS, ...customKillerPerks]
+      : normalizeSelection(src.killer_perks, [...KILLER_PERKS, ...customKillerPerks], DEFAULT_GAME_TOOLS.killer_perks),
+    survivor_perks: wasOldSurvivorDefault
+      ? [...SURVIVOR_PERKS, ...customSurvivorPerks]
+      : normalizeSelection(src.survivor_perks, [...SURVIVOR_PERKS, ...customSurvivorPerks], DEFAULT_GAME_TOOLS.survivor_perks),
+    perk_count: clampInt(src.perk_count, 1, 6, DEFAULT_GAME_TOOLS.perk_count),
+    perk_role: oneOf(['killer', 'survivor', 'mixed'])(src.perk_role, DEFAULT_GAME_TOOLS.perk_role),
+    perk_source: oneOf(['pool', 'character'])(src.perk_source, DEFAULT_GAME_TOOLS.perk_source),
+  };
 }
 
 export function normalizeHotkeys(raw) {
@@ -543,11 +626,13 @@ export function migrateLegacy(raw) {
   const section = (value) => (value && typeof value === 'object' && !Array.isArray(value) ? value : {});
 
   const out = {
-    version: 2,
+    version: Number.isInteger(raw.version) ? raw.version : 1,
     hotkeys: { ...DEFAULT_HOTKEYS, ...section(raw.hotkeys), ...legacyHotkeys },
     interface: { ...DEFAULT_INTERFACE, ...section(raw.interface) },
+    game_tools: { ...DEFAULT_GAME_TOOLS, ...section(raw.game_tools) },
     stopwatch: { ...DEFAULT_STOPWATCH, ...section(raw.stopwatch) },
     scoreboard: { ...DEFAULT_SCOREBOARD, ...section(raw.scoreboard) },
+    match_timers: { ...DEFAULT_MATCH_TIMERS, ...section(raw.match_timers) },
     crosshair: { ...DEFAULT_CROSSHAIR, ...section(raw.crosshair) },
     stats: { ...DEFAULT_STATS, ...section(raw.stats) },
     countdowns: [],
@@ -1191,16 +1276,41 @@ export function buildTemplate(template, existing = []) {
 export function normalizeConfig(raw) {
   const migrated = migrateLegacy(raw) || {};
   const countdowns = Array.isArray(migrated.countdowns) ? migrated.countdowns : [];
+  const matchTimers = migrated.match_timers;
+  const migrateOldAutoScoreDefault = migrated.version < 3
+    && matchTimers && matchTimers.auto_score_threshold_seconds === 25;
   return {
-    version: 2,
+    version: 3,
     hotkeys: normalizeHotkeys(migrated.hotkeys),
     interface: normalizeInterface(migrated.interface),
+    game_tools: normalizeGameTools(migrated.game_tools),
     stopwatch: normalizeStopwatch(migrated.stopwatch),
     scoreboard: normalizeScoreboard(migrated.scoreboard),
+    match_timers: normalizeMatchTimers(matchTimers, migrateOldAutoScoreDefault),
     crosshair: normalizeCrosshair(migrated.crosshair),
     stats: normalizeStats(migrated.stats),
     countdowns: countdowns.length
       ? countdowns.slice(0, 24).map(normalizeTimer)
       : DEFAULT_CONFIG.countdowns.map((c) => normalizeTimer(c)),
+  };
+}
+
+function normalizeMatchTimers(raw, migrateOldDefault = false) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const timers = src.timers && typeof src.timers === 'object' ? src.timers : {};
+  return {
+    active_player: src.active_player === 2 ? 2 : 1,
+    auto_score: bool(src.auto_score, true),
+    auto_score_threshold_seconds: intIn(0, 3600)(
+      migrateOldDefault ? 5 : src.auto_score_threshold_seconds,
+      DEFAULT_MATCH_TIMERS.auto_score_threshold_seconds,
+    ),
+    timers: Object.fromEntries([1, 2].map((id) => {
+      const timer = timers[id] && typeof timers[id] === 'object' ? timers[id] : {};
+      return [id, {
+        status: ['running', 'paused', 'stopped'].includes(timer.status) ? timer.status : 'stopped',
+        elapsed_ms: Math.max(0, Math.min(86_400_000, Number.isFinite(timer.elapsed_ms) ? timer.elapsed_ms : 0)),
+      }];
+    })),
   };
 }

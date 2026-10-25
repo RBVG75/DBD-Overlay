@@ -75,3 +75,66 @@ export function makeDraggable(el, { getState, onMove, onEnd }) {
   el.addEventListener('pointerup', stop);
   el.addEventListener('pointercancel', stop);
 }
+
+const RESIZABLE = '#stopwatch, #scoreboard, .timer[data-countdown-index], .info-panel[data-panel-id]';
+
+export function makeOverlayResizable(root, { getScale, onResize, onEnd }) {
+  function attach(target) {
+    if (!(target instanceof HTMLElement) || !target.matches(RESIZABLE) || target.querySelector(':scope > .overlay-resize-handle')) return;
+    target.classList.add('overlay-editable');
+    const handle = document.createElement('button');
+    handle.type = 'button';
+    handle.className = 'overlay-resize-handle';
+    handle.setAttribute('aria-label', 'Cambiar tamaño del elemento del overlay');
+    handle.title = 'Arrastra para cambiar el tamaño';
+    handle.textContent = '↘';
+    target.appendChild(handle);
+  }
+
+  root.querySelectorAll(RESIZABLE).forEach(attach);
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        attach(node);
+        node.querySelectorAll(RESIZABLE).forEach(attach);
+      }
+    }
+  });
+  observer.observe(root, { childList: true, subtree: true });
+
+  let active = null;
+  root.addEventListener('pointerdown', (event) => {
+    const handle = event.target.closest('.overlay-resize-handle');
+    if (!handle || event.button !== 0 || !document.body.classList.contains('edit-mode')) return;
+    const target = handle.parentElement;
+    active = {
+      handle,
+      target,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      scale: getScale(target),
+    };
+    handle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  root.addEventListener('pointermove', (event) => {
+    if (!active || active.pointerId !== event.pointerId) return;
+    const distance = ((event.clientX - active.startX) + (event.clientY - active.startY)) / 2;
+    const scale = Math.max(50, Math.min(250, Math.round(active.scale + distance * 0.45)));
+    onResize(active.target, scale);
+  });
+
+  function finish(event) {
+    if (!active || active.pointerId !== event.pointerId) return;
+    const { handle } = active;
+    active = null;
+    try { handle.releasePointerCapture(event.pointerId); } catch (_) { /* already released */ }
+    if (onEnd) onEnd();
+  }
+  root.addEventListener('pointerup', finish);
+  root.addEventListener('pointercancel', finish);
+}

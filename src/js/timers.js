@@ -101,7 +101,7 @@ export function createTimerEngine(layer) {
     return formatClock(value, cfg.text_format, cfg.decimals);
   }
 
-  function spawn(cfg) {
+  function spawn(cfg, configIndex = configs.indexOf(cfg)) {
     if (!cfg) return null;
     if (!cfg.allow_multiple) {
       const existing = active.find((t) => t.cfg === cfg && !t.finished);
@@ -109,11 +109,13 @@ export function createTimerEngine(layer) {
         existing.start = performance.now();
         existing.finished = false;
         existing.view.el.classList.remove('is-over', 'removing');
+        existing.view.el.dataset.countdownIndex = String(configIndex);
         return existing;
       }
     }
 
     const view = createTimerView(cfg);
+    if (configIndex >= 0) view.el.dataset.countdownIndex = String(configIndex);
     const anchor = anchors.get(cfg.position) || anchors.get('mid-left');
     anchor.dataset.stack = cfg.stack;
     const slot = createSlot(cfg);
@@ -122,6 +124,7 @@ export function createTimerEngine(layer) {
 
     const entry = {
       cfg,
+      configIndex,
       view,
       slot,
       start: performance.now(),
@@ -135,7 +138,7 @@ export function createTimerEngine(layer) {
   }
 
   function trigger(index) {
-    return spawn(configs[index]);
+    return spawn(configs[index], index);
   }
 
   function preview(cfg) {

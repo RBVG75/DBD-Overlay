@@ -1,7 +1,7 @@
 {
-  "name": "overlay-stopwatch",
+  "name": "dbd-overlay",
   "version": "1.0.0",
-  "description": "Minimalist gamer overlay stopwatch for Windows",
+  "description": "Minimalist DBD 1v1 stream overlay for Windows",
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
