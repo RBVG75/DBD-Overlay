@@ -1,7 +1,7 @@
 // Stream theme loader. Theme JSON files are served from the existing Vite
 // public directory, so adding a theme does not require changing the layout.
 
-const DEFAULT_THEME = 'gojo';
+const DEFAULT_THEME = 'azul';
 const themeEffects = document.getElementById('theme-effects');
 
 function setToken(name, value) {

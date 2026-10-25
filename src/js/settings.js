@@ -28,14 +28,14 @@ const PAGES = [
 ];
 
 const STREAM_THEMES = [
-  { id: 'gojo', label: 'Gojo Satoru' },
-  { id: 'sukuna', label: 'Sukuna' },
-  { id: 'choso', label: 'Choso' },
-  { id: 'geto', label: 'Geto Suguru' },
-  { id: 'naoya', label: 'Naoya Zenin' },
-  { id: 'akaza', label: 'Akaza' },
-  { id: 'kokushibo', label: 'Kokushibo' },
-  { id: 'naruto', label: 'Naruto' },
+  { id: 'azul', label: 'Azul' },
+  { id: 'rojo', label: 'Rojo' },
+  { id: 'violeta', label: 'Violeta' },
+  { id: 'plata', label: 'Plata' },
+  { id: 'verde', label: 'Verde' },
+  { id: 'rosa', label: 'Rosa' },
+  { id: 'oro', label: 'Oro' },
+  { id: 'naranja', label: 'Naranja' },
 ];
 
 function createPreview(container) {

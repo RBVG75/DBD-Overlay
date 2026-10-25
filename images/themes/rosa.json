@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "akaza",
-  "name": "Akaza",
+  "id": "rosa",
+  "name": "Rosa",
   "palette": { "primary": "#E83E9D", "secondary": "#FFFFFF", "accent": "#080509", "background": "#130712", "surface": "#29132A", "text": "#FFFFFF", "muted": "#D4A9C8" },
   "typography": { "family": "'Arial Black', 'Segoe UI', sans-serif", "weight": 800, "letter_spacing": "0.025em" },
   "effects": { "preset": "shockwave", "intensity": 0.9, "particles": { "enabled": true, "count": 20, "mode": "impact", "speed": "fast" }, "alerts": { "enter": "shockwave", "exit": "scale-out", "duration_ms": 480 } },
-  "assets": { "main": "/assets/akaza/main.png", "icon": "/assets/akaza/icon.svg", "alert_icon": "/assets/akaza/alert-icon.svg" }
+  "assets": { "main": "/assets/rosa/main.png", "icon": "/assets/rosa/icon.svg", "alert_icon": "/assets/rosa/alert-icon.svg" }
 }

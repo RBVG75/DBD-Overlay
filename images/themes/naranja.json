@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "naruto",
-  "name": "Naruto",
+  "id": "naranja",
+  "name": "Naranja",
   "palette": { "primary": "#FF7A00", "secondary": "#2D75C7", "accent": "#080A0F", "background": "#101016", "surface": "#202333", "text": "#FFF8EF", "muted": "#B8C4DA" },
   "typography": { "family": "'Trebuchet MS', 'Segoe UI', sans-serif", "weight": 700, "letter_spacing": "0.018em" },
   "effects": { "preset": "chakra-rise", "intensity": 0.8, "particles": { "enabled": true, "count": 22, "mode": "energy-rise", "speed": "medium" }, "alerts": { "enter": "orange-burst", "exit": "fade", "duration_ms": 520 } },
-  "assets": { "main": "/assets/naruto/main.png", "icon": "/assets/naruto/icon.svg", "alert_icon": "/assets/naruto/alert-icon.svg" }
+  "assets": { "main": "/assets/naranja/main.png", "icon": "/assets/naranja/icon.svg", "alert_icon": "/assets/naranja/alert-icon.svg" }
 }

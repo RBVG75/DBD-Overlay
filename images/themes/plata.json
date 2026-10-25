@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "geto",
-  "name": "Geto Suguru",
+  "id": "plata",
+  "name": "Plata",
   "palette": { "primary": "#C9C9D0", "secondary": "#8C68B5", "accent": "#09090C", "background": "#0B0B0E", "surface": "#202026", "text": "#F7F7FA", "muted": "#AAAAB5" },
   "typography": { "family": "'Georgia', 'Times New Roman', serif", "weight": 600, "letter_spacing": "0.01em" },
   "effects": { "preset": "moving-shadow", "intensity": 0.7, "particles": { "enabled": true, "count": 16, "mode": "dark-rise", "speed": "medium" }, "alerts": { "enter": "shadow-sweep", "exit": "fade", "duration_ms": 700 } },
-  "assets": { "main": "/assets/geto/main.png", "icon": "/assets/geto/icon.svg", "alert_icon": "/assets/geto/alert-icon.svg" }
+  "assets": { "main": "/assets/plata/main.png", "icon": "/assets/plata/icon.svg", "alert_icon": "/assets/plata/alert-icon.svg" }
 }

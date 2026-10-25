@@ -404,7 +404,7 @@ export const SCREEN_MODES = [
 
 export const DEFAULT_INTERFACE = {
   theme: 'dbd',
-  stream_theme: 'gojo',
+  stream_theme: 'azul',
   screen_mode: 'monitor',
   accent_color: '#c52d35',
   ui_scale: 100,
@@ -530,10 +530,20 @@ export function normalizeCrosshair(raw) {
   });
 }
 
+const LEGACY_STREAM_THEMES = {
+  gojo: 'azul', sukuna: 'rojo', choso: 'violeta', geto: 'plata',
+  naoya: 'verde', akaza: 'rosa', kokushibo: 'oro', naruto: 'naranja',
+};
+
+const streamTheme = (v, d) => {
+  const id = str(v, d);
+  return Object.hasOwn(LEGACY_STREAM_THEMES, id) ? LEGACY_STREAM_THEMES[id] : id;
+};
+
 export function normalizeInterface(raw) {
   return normalizeSection(DEFAULT_INTERFACE, raw, {
     theme: oneOf(THEMES.map((t) => t.id).concat('custom')),
-    stream_theme: str,
+    stream_theme: streamTheme,
     screen_mode: oneOf(SCREEN_MODES.map((m) => m.id)),
     accent_color: color,
     ui_scale: intIn(60, 200),

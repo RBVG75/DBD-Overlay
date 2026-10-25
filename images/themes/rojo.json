@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "sukuna",
-  "name": "Sukuna",
+  "id": "rojo",
+  "name": "Rojo",
   "palette": { "primary": "#B0202A", "secondary": "#D9B45B", "accent": "#050505", "background": "#120607", "surface": "#211014", "text": "#FFF4E8", "muted": "#C6A9A0" },
   "typography": { "family": "'Arial Narrow', 'Bahnschrift', sans-serif", "weight": 800, "letter_spacing": "0.04em" },
   "effects": { "preset": "blood-distortion", "intensity": 0.9, "particles": { "enabled": true, "count": 12, "mode": "red-flash", "speed": "fast" }, "alerts": { "enter": "red-flash", "exit": "distort", "duration_ms": 420 } },
-  "assets": { "main": "/assets/sukuna/main.png", "icon": "/assets/sukuna/icon.svg", "alert_icon": "/assets/sukuna/alert-icon.svg" }
+  "assets": { "main": "/assets/rojo/main.png", "icon": "/assets/rojo/icon.svg", "alert_icon": "/assets/rojo/alert-icon.svg" }
 }

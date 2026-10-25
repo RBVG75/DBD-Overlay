@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "kokushibo",
-  "name": "Kokushibo",
+  "id": "oro",
+  "name": "Oro",
   "palette": { "primary": "#B28A3A", "secondary": "#7E1F28", "accent": "#080706", "background": "#0B0907", "surface": "#211A10", "text": "#F2E7C9", "muted": "#B9AA89" },
   "typography": { "family": "'Georgia', 'Times New Roman', serif", "weight": 700, "letter_spacing": "0.03em" },
   "effects": { "preset": "moon-ash", "intensity": 0.7, "particles": { "enabled": true, "count": 20, "mode": "ash", "speed": "slow" }, "alerts": { "enter": "golden-pulse", "exit": "fade", "duration_ms": 900 } },
-  "assets": { "main": "/assets/kokushibo/main.png", "icon": "/assets/kokushibo/icon.svg", "alert_icon": "/assets/kokushibo/alert-icon.svg" }
+  "assets": { "main": "/assets/oro/main.png", "icon": "/assets/oro/icon.svg", "alert_icon": "/assets/oro/alert-icon.svg" }
 }
