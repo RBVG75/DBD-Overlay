@@ -4,6 +4,16 @@ Overlay de cronómetros y marcador 1v1 para streams de Dead by Daylight en Windo
 hecho con **Tauri v2**. La captura del overlay y la ventana de ajustes son
 independientes: selecciona **DBD Overlay** como fuente en OBS.
 
+## Descargar
+
+1. Ve a la página de [Releases](https://github.com/RBVG75/DBD-Overlay/releases) del repositorio.
+2. Abre la última versión y descarga el archivo que termina en **`x64-setup.exe`**.
+3. Ejecútalo y sigue el instalador.
+
+No hace falta instalar nada más ni compilar el proyecto. Como el instalador no está
+firmado digitalmente, Windows SmartScreen puede mostrar un aviso: pulsa
+**Más información → Ejecutar de todas formas**.
+
 ## Qué hace
 
 - **Siempre encima** — se mantiene sobre cualquier ventana, incluidos los juegos en pantalla completa sin bordes, y cubre la pantalla entera con la franja de la barra de tareas incluida
